@@ -155,6 +155,7 @@
           <div class="note-title"></div>
           <div class="note-sub"></div>
           <div class="note-badges"></div>
+          <div class="note-contract"></div>
         </div>
         <div class="note-quick">
           <button class="mini-btn" data-act="copy-user" title="Copier l'identifiant">👤</button>
@@ -177,6 +178,12 @@
         priceChip.className = "chip chip-price";
         priceChip.textContent = formatPrice(n.price, n.pricePeriod);
         badges.appendChild(priceChip);
+      }
+      const contractEl = card.querySelector(".note-contract");
+      if (tag === "Abonnement" && (n.startDate || n.endDate)) {
+        contractEl.textContent = "📅 " + contractLabel(n.startDate, n.endDate);
+      } else {
+        contractEl.remove();
       }
       card.addEventListener("click", (e) => {
         const act = e.target.getAttribute("data-act");
@@ -261,7 +268,23 @@
 
   function updatePriceField() {
     const isSub = $("note-tag").value === "Abonnement";
-    if (isSub) show($("price-field")); else hide($("price-field"));
+    if (isSub) { show($("price-field")); show($("sub-dates-field")); }
+    else { hide($("price-field")); hide($("sub-dates-field")); }
+  }
+
+  // "2026-01-15" -> "15/01/2026"
+  function formatDate(iso) {
+    if (!iso) return "";
+    const [y, m, d] = String(iso).split("-");
+    return (y && m && d) ? `${d}/${m}/${y}` : String(iso);
+  }
+  // Libellé de la période de contrat d'un abonnement
+  function contractLabel(start, end) {
+    const s = formatDate(start), e = formatDate(end);
+    if (s && e) return `${s} → ${e}`;
+    if (s) return `Depuis le ${s}`;
+    if (e) return `Jusqu'au ${e}`;
+    return "";
   }
 
   // "13,49" ou "13.49 €" -> 13.49 (NaN si vide/illisible)
@@ -317,6 +340,8 @@
     $("note-tag").value = isNew ? "Compte" : (note.tag || "Compte");
     $("note-price").value = isNew ? "" : (note.price || "");
     $("note-price-period").value = isNew ? "month" : (note.pricePeriod || "month");
+    $("note-start").value = isNew ? "" : (note.startDate || "");
+    $("note-end").value = isNew ? "" : (note.endDate || "");
     updatePriceField();
     $("note-username").value = isNew ? "" : (note.username || "");
     $("note-password").value = isNew ? "" : (note.password || "");
@@ -347,6 +372,8 @@
       tag: tag,
       price: tag === "Abonnement" ? price : "",
       pricePeriod: tag === "Abonnement" ? $("note-price-period").value : "",
+      startDate: tag === "Abonnement" ? $("note-start").value : "",
+      endDate: tag === "Abonnement" ? $("note-end").value : "",
       username: $("note-username").value.trim(),
       password: $("note-password").value,
       url: $("note-url").value.trim(),

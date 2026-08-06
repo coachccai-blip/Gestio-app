@@ -95,15 +95,25 @@
           <select id="note-tag"></select>
         </label>
         <label id="price-field" class="hidden">Prix
-          <div class="input-row">
-            <input type="text" id="note-price" inputmode="decimal" placeholder="9,99" />
-            <span class="suffix">€</span>
+          <div class="input-row price-row">
+            <div class="price-amount">
+              <input type="text" id="note-price" inputmode="decimal" placeholder="9,99" />
+              <span class="suffix">€</span>
+            </div>
             <select id="note-price-period">
               <option value="month">par mois</option>
               <option value="year">par an</option>
             </select>
           </div>
         </label>
+        <div id="sub-dates-field" class="hidden sub-dates">
+          <label>Début de contrat
+            <input type="date" id="note-start" />
+          </label>
+          <label>Fin de contrat
+            <input type="date" id="note-end" />
+          </label>
+        </div>
         <label>Identifiant / e-mail
           <div class="input-row">
             <input type="text" id="note-username" placeholder="mon.email@exemple.com" />
