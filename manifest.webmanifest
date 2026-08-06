@@ -1,0 +1,20 @@
+{
+  "name": "Gestio — Coffre-fort de mots de passe",
+  "short_name": "Gestio",
+  "description": "Gestionnaire de mots de passe local et chiffré. Fonctionne hors-ligne sur Windows et Android.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

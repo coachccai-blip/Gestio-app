@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Gestio — Coffre-fort de mots de passe</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ÉCRAN DE VERROUILLAGE -->
+  <section id="lock-screen" class="screen active">
+    <div class="lock-card">
+      <div class="brand">
+        <img src="icon.svg" alt="" class="brand-logo" />
+        <h1>Gestio</h1>
+        <p class="tagline">Ton coffre-fort de mots de passe, chiffré et hors-ligne.</p>
+      </div>
+
+      <!-- Création du coffre (premier lancement) -->
+      <form id="create-form" class="lock-form hidden" autocomplete="off">
+        <h2>Créer ton coffre</h2>
+        <p class="hint">Choisis un mot de passe maître. Il déverrouille toutes tes notes.
+          <strong>Il n'est stocké nulle part</strong> — si tu l'oublies, tes données sont irrécupérables.</p>
+        <label>Mot de passe maître
+          <input type="password" id="create-pass" required minlength="6" autocomplete="new-password" />
+        </label>
+        <div class="strength"><div id="create-strength-bar"></div></div>
+        <label>Confirme le mot de passe maître
+          <input type="password" id="create-pass2" required minlength="6" autocomplete="new-password" />
+        </label>
+        <p class="error" id="create-error"></p>
+        <button type="submit" class="btn btn-primary btn-block">Créer mon coffre</button>
+        <button type="button" class="btn btn-ghost btn-block" id="goto-import">J'ai déjà un coffre (importer un fichier)</button>
+      </form>
+
+      <!-- Déverrouillage -->
+      <form id="unlock-form" class="lock-form hidden" autocomplete="off">
+        <h2>Déverrouiller</h2>
+        <label>Mot de passe maître
+          <input type="password" id="unlock-pass" required autocomplete="current-password" autofocus />
+        </label>
+        <p class="error" id="unlock-error"></p>
+        <button type="submit" class="btn btn-primary btn-block">Déverrouiller</button>
+        <button type="button" class="btn btn-ghost btn-block" id="unlock-import">Importer / restaurer un coffre</button>
+      </form>
+    </div>
+    <footer class="lock-footer">Chiffrement AES-256 · PBKDF2 · Tout reste sur cet appareil</footer>
+  </section>
+
+  <!-- APPLICATION -->
+  <section id="app-screen" class="screen">
+    <header class="topbar">
+      <div class="topbar-left">
+        <img src="icon.svg" alt="" class="topbar-logo" />
+        <span class="topbar-title">Gestio</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btn-sync" title="Synchroniser (exporter / importer)">⇅</button>
+        <button class="icon-btn" id="btn-lock" title="Verrouiller">🔒</button>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <input type="search" id="search" placeholder="Rechercher une note, un identifiant, un site…" autocomplete="off" />
+      <button class="btn btn-primary" id="btn-add">+ Nouvelle</button>
+    </div>
+
+    <div id="subs-total" class="subs-total hidden"></div>
+
+    <main id="notes-list" class="notes-list"></main>
+
+    <p id="empty-state" class="empty-state hidden">
+      Aucune note pour l'instant.<br />Clique sur <strong>+ Nouvelle</strong> pour en créer une.
+    </p>
+  </section>
+
+  <!-- ÉDITEUR DE NOTE -->
+  <div id="editor-backdrop" class="backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true">
+      <header class="modal-head">
+        <h2 id="editor-title">Nouvelle note</h2>
+        <button class="icon-btn" id="editor-close" title="Fermer">✕</button>
+      </header>
+      <form id="editor-form" class="modal-body" autocomplete="off">
+        <input type="hidden" id="note-id" />
+        <label>Titre
+          <input type="text" id="note-title" placeholder="Ex. Compte Google" required />
+        </label>
+        <label>Type
+          <select id="note-tag"></select>
+        </label>
+        <label id="price-field" class="hidden">Prix
+          <div class="input-row">
+            <input type="text" id="note-price" inputmode="decimal" placeholder="9,99" />
+            <span class="suffix">€</span>
+            <select id="note-price-period">
+              <option value="month">par mois</option>
+              <option value="year">par an</option>
+            </select>
+          </div>
+        </label>
+        <label>Identifiant / e-mail
+          <div class="input-row">
+            <input type="text" id="note-username" placeholder="mon.email@exemple.com" />
+            <button type="button" class="mini-btn" data-copy="note-username" title="Copier">📋</button>
+          </div>
+        </label>
+        <label>Mot de passe
+          <div class="input-row">
+            <input type="password" id="note-password" placeholder="••••••••" />
+            <button type="button" class="mini-btn" data-toggle="note-password" title="Afficher/Masquer">👁</button>
+            <button type="button" class="mini-btn" data-copy="note-password" title="Copier">📋</button>
+          </div>
+        </label>
+        <label>Site / URL
+          <div class="input-row">
+            <input type="text" id="note-url" placeholder="https://…" />
+            <button type="button" class="mini-btn" data-copy="note-url" title="Copier">📋</button>
+          </div>
+        </label>
+        <label>Notes
+          <textarea id="note-note" rows="3" placeholder="Infos complémentaires (facultatif)"></textarea>
+        </label>
+        <label>Couleur de la note
+          <div class="swatches" id="note-swatches"></div>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="btn-delete">Supprimer</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn btn-ghost" id="btn-cancel">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SYNCHRONISATION -->
+  <div id="sync-backdrop" class="backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true">
+      <header class="modal-head">
+        <h2>Synchroniser</h2>
+        <button class="icon-btn" id="sync-close" title="Fermer">✕</button>
+      </header>
+      <div class="modal-body">
+        <p class="hint">La synchro est <strong>manuelle</strong> et sous ton contrôle. Le fichier exporté
+          est chiffré : illisible sans ton mot de passe maître.</p>
+
+        <div class="sync-block">
+          <h3>1 · Exporter depuis cet appareil</h3>
+          <p class="hint">Enregistre un fichier coffre, puis transfère-le sur l'autre appareil
+            (câble, cloud, e-mail à toi-même…).</p>
+          <button class="btn btn-primary btn-block" id="btn-export">Exporter le coffre chiffré</button>
+        </div>
+
+        <div class="sync-block">
+          <h3>2 · Importer sur cet appareil</h3>
+          <p class="hint">Charge un fichier coffre venant de ton autre appareil.</p>
+          <input type="file" id="import-file" accept=".json,application/json" class="hidden" />
+          <button class="btn btn-secondary btn-block" id="btn-import-pick">Choisir un fichier coffre…</button>
+          <div id="import-panel" class="hidden">
+            <p class="hint" id="import-filename"></p>
+            <label>Mot de passe maître de ce fichier
+              <input type="password" id="import-pass" autocomplete="off" />
+            </label>
+            <div class="radio-row">
+              <label class="radio"><input type="radio" name="import-mode" value="merge" checked /> Fusionner (recommandé)</label>
+              <label class="radio"><input type="radio" name="import-mode" value="replace" /> Remplacer tout</label>
+            </div>
+            <p class="error" id="import-error"></p>
+            <button class="btn btn-primary btn-block" id="btn-import-do">Importer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
