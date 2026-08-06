@@ -1,14 +1,15 @@
 /* Service worker Gestio — cache l'app pour un fonctionnement 100% hors-ligne.
    Aucune donnée utilisateur ne transite ici : le coffre reste dans localStorage. */
 
-const CACHE = "gestio-v2";
+const CACHE = "gestio-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
-  "./icon.svg",
+  "./logo_gestio.png",
+  "./logo_gestio-192.png",
 ];
 
 self.addEventListener("install", (e) => {
