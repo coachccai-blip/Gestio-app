@@ -148,6 +148,7 @@ textarea { resize: vertical; font-family: inherit; }
   max-width: 760px; margin: 0 auto;
   padding: 8px 18px 40px;
   display: grid; gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
 }
 .note-card {
   background: var(--card);
@@ -157,6 +158,7 @@ textarea { resize: vertical; font-family: inherit; }
   cursor: pointer;
   transition: border-color .15s, transform .06s;
   display: flex; align-items: center; gap: 14px;
+  min-width: 0;
 }
 .note-card:hover { border-color: var(--primary); }
 .note-card:active { transform: scale(.995); }
